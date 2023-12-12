@@ -1,29 +1,22 @@
 #coding:utf-8
-
-import psutil
 import time
 import ctypes
+import psutil
 from setup import SetupManager
 
 # Définition de la fonction SetConsoleTitleW
 ctypes.windll.kernel32.SetConsoleTitleW.restype = ctypes.c_bool
 ctypes.windll.kernel32.SetConsoleTitleW.argtypes = [ctypes.c_wchar_p]
 
-# COLORS CODE | ANSI d'échappement pour les couleurs |
-# GREEN     : \u001b[92m
-# ROSE      : \u001b[95m
-# ORANGE    : \u001b[93m
-# RED       : \u001b[91m
+setup           = SetupManager()
+config          = setup.setup_config_json_file()
 
-cfg = SetupManager()
+COLOR_KEYS     = config["color_keys"]
+COLOR_VALUES   = config["color_values"]
+RESET           = "\033[0m" # Reset the color
 
-_, COLOR_TXT = cfg.setup_config_json_file()
-RESET = "\033[0m" # Reset the color
-
-TIME_RESET ,_ = cfg.setup_config_json_file()
 
 def set_console_title(title):
-    # Appel à la fonction SetConsoleTitleW pour changer le titre de la fenêtre
     ctypes.windll.kernel32.SetConsoleTitleW(title)
 
 def get_top_processes():
@@ -39,18 +32,23 @@ def get_top_processes():
     return top_cpu_processes, top_memory_processes
 
 def print_top_processes(processes, title):
-    print(f"\nTop {title} Processes:")
-    print("{:<10} {:<20} {:<15} {:<15}".format('PID', 'Name', 'CPU %', 'Memory %'))
-    print("="*70)
-    for proc in processes[:5]:  # Affiche les 5 premiers processus
-        print(COLOR_TXT +"{:<10} {:<20} {:<15.2f} {:<15.2f}".format(
+
+    print(f'\nTop {title} Processes ({config["max_process"]}) :')
+
+    print(COLOR_KEYS +"{:<10} {:<20} {:<15} {:<15}".format('PID', 'Name', 'CPU %', 'Memory %'))
+
+    print("="*70 + RESET)
+
+    for proc in processes[:int(config["max_process"])]:  # Affiche les 5 premiers processus
+        print(COLOR_VALUES +"{:<10} {:<20} {:<15.2f} {:<15.2f}".format(
             proc.info['pid'], proc.info['name'], proc.info['cpu_percent'], proc.info['memory_percent']
             ) + RESET)
-    print("______ Process Monitoring V 0.2 ______")
+        setup.log_process_info(proc)
 
 if __name__ == "__main__":
 
-    set_console_title("ProMonito V.0.2")
+    set_console_title(f"ProMonito V {setup.APP_VERSION}")
+    setup.create_log_file()
 
     while True:
 
@@ -59,4 +57,4 @@ if __name__ == "__main__":
         print_top_processes(top_cpu_processes, "CPU")
         print_top_processes(top_memory_processes, "Memory")
 
-        time.sleep(TIME_RESET)
+        time.sleep(int(config["time_to_refresh"]))

@@ -1,4 +1,7 @@
 {
     "time_to_refresh": 5,
-    "color_text": "\u001b[91m"
+    "max_process": 6,
+    "log_file": false,
+    "color_keys": "\u001b[95m",
+    "color_values": "\u001b[92m"
 }
